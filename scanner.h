@@ -4,6 +4,8 @@
 #ifndef SCANNER_H
 #define SCANNER_H
 
+#include <string>
+
 class Scanner {
 public:
     static void scan(FILE *, char, char);

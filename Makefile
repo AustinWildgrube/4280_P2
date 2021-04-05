@@ -1,6 +1,6 @@
-OBJS	= main.o scanner.o testScanner.o
-SOURCE	= main.cpp scanner.cpp testScanner.cpp
-HEADER	= scanner.h
+OBJS	= main.o scanner.o parser.o
+SOURCE	= main.cpp scanner.cpp parser.cpp
+HEADER	= scanner.h parser.h
 OUT	    = scanner
 CC	    = g++
 FLAGS	= -g -c -Wall
@@ -14,8 +14,8 @@ main.o: main.cpp
 scanner.o: scanner.cpp
 	$(CC) $(FLAGS) scanner.cpp -std=c++11
 
-testScanner.o: testScanner.cpp
-	$(CC) $(FLAGS) testScanner.cpp -std=c++11
+parser.o: parser.cpp
+	$(CC) $(FLAGS) parser.cpp -std=c++11
 
 clean:
 	rm -f $(OBJS) $(OUT)

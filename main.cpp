@@ -5,7 +5,7 @@
 #include <fstream>
 #include <string>
 
-#include "testScanner.h"
+#include "parser.h"
 
 using namespace std;
 
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 
     // To use ofstream it needed a string literal or a C String so we have to convert it
     auto back_to_cstr = fileName.c_str();
-    TestScanner::testDriver(back_to_cstr);
+    Parser::parser(back_to_cstr);
 
     return 0;
 }
