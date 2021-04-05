@@ -4,40 +4,9 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-std::string keywordArray[20] = {
-        "begin",
-        "end",
-        "loop",
-        "whole",
-        "void",
-        "exit",
-        "getter",
-        "outter",
-        "main",
-        "if",
-        "then",
-        "assign",
-        "data",
-        "proc"
-};
-
-std::string tokenID[] {
-        "KW_tk",
-        "ID_tk",
-        "NUM_tk",
-        "OP_tk",
-        "DEL_tk",
-        "EOF_tk"
-};
-
-std::string tokenName[] {
-        "Keyword",
-        "Identifier",
-        "Number",
-        "Operator",
-        "Delimiter",
-        "End of File"
-};
+extern std::string keywordArray[20];
+extern std::string tokenID[];
+extern std::string tokenName[];
 
 // Our Token struct is what we print from
 struct Token {

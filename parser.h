@@ -4,11 +4,9 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-
 class Parser {
 public:
     static void parser(const char* fileName);
 };
-
 
 #endif //PARSER_H

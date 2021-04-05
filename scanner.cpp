@@ -4,12 +4,47 @@
 #include <iostream>
 #include <string>
 #include <cstdio>
-#include <iomanip>
 
 #include "scanner.h"
-#include "token.h"
 
 using namespace std;
+
+// Had to move token variables into scanner cpp to avoid multiple inclusion
+string keywordArray[20] = {
+        "begin",
+        "end",
+        "loop",
+        "whole",
+        "void",
+        "exit",
+        "getter",
+        "outter",
+        "main",
+        "if",
+        "then",
+        "assign",
+        "data",
+        "proc"
+};
+
+string tokenID[] {
+        "KW_tk",
+        "ID_tk",
+        "NUM_tk",
+        "OP_tk",
+        "DEL_tk",
+        "EOF_tk"
+};
+
+string tokenName[] {
+        "Keyword",
+        "Identifier",
+        "Number",
+        "Operator",
+        "Delimiter",
+        "End of File"
+};
+
 
 // We can use this array to get the correct column
 char tokenArray[23] = {
@@ -106,7 +141,9 @@ int lineNumber = 1;
  * @param character
  * @param lookAhead
  */
-void Scanner::scan(FILE *file, char character, char lookAhead) {
+Token Scanner::scan(FILE *file, char character, char lookAhead) {
+    Token printStatement;
+
     // We need to start of checking for comments so we can immediately ignore them
     if (character == '$' && lookAhead == '$') {
         // We need to loop until we have two $$
@@ -161,10 +198,10 @@ void Scanner::scan(FILE *file, char character, char lookAhead) {
             // Check to see if the words are keywords
             if (checkKeywords(word))
                 // Is a keyword
-                Scanner::getPrintStatement(1001, word, lineNumber);
+                return Scanner::getPrintStatement(1001, word, lineNumber);
             else
                 // Is not a keyword
-                Scanner::getPrintStatement(1002, word, lineNumber);
+                return Scanner::getPrintStatement(1002, word, lineNumber);
         }
 
     // The character is not a letter
@@ -195,7 +232,7 @@ void Scanner::scan(FILE *file, char character, char lookAhead) {
                     if (token == -2)
                         Scanner::getErrorStatement(tempString, lineNumber);
                     else
-                        Scanner::getPrintStatement(token, tempString, lineNumber);
+                        printStatement = Scanner::getPrintStatement(token, tempString, lineNumber);
 
                     // Clear our temp string and reset our state
                     tempString.clear();
@@ -211,11 +248,11 @@ void Scanner::scan(FILE *file, char character, char lookAhead) {
                     } else if (token >= 1000 && token <= 1023) {
                         if (!tempString.empty()) {
                             tempString.push_back(character);
-                            Scanner::getPrintStatement(token, tempString, lineNumber);
+                            printStatement = Scanner::getPrintStatement(token, tempString, lineNumber);
                             tempString.clear();
                         } else {
                             string characterToString(1, character);
-                            Scanner::getPrintStatement(token, characterToString, lineNumber);
+                            printStatement = Scanner::getPrintStatement(token, characterToString, lineNumber);
                         }
 
                         state = 0;
@@ -224,7 +261,7 @@ void Scanner::scan(FILE *file, char character, char lookAhead) {
                     } else if (token == -1) {
                         token = Scanner::searchTokens(state, 21);
 
-                        Scanner::getPrintStatement(token, tempString, lineNumber);
+                        printStatement = Scanner::getPrintStatement(token, tempString, lineNumber);
                         tempString.clear();
 
                         // Reset our state and put back the look ahead character
@@ -252,11 +289,11 @@ void Scanner::scan(FILE *file, char character, char lookAhead) {
                 // Check the last one
                 token = Scanner::searchTokens(state, 21);
 
-                Scanner::getPrintStatement(token, tempString, lineNumber);
+                printStatement = Scanner::getPrintStatement(token, tempString, lineNumber);
             }
 
             // Print our EOF
-            getPrintStatement(1000, "", lineNumber);
+            printStatement = getPrintStatement(1000, "", lineNumber);
         }
     }
 
@@ -264,6 +301,8 @@ void Scanner::scan(FILE *file, char character, char lookAhead) {
     if (character == '\n') {
         lineNumber++;
     }
+
+    return printStatement;
 }
 
 /**
@@ -318,7 +357,7 @@ bool Scanner::checkKeywords(const string &word) {
  * @param userInput
  * @param lineNumber
  */
-void Scanner::getPrintStatement(int tokenNumber, const string& userInput, int tokenLineNumber) {
+Token Scanner::getPrintStatement(int tokenNumber, const string& userInput, int tokenLineNumber) {
     Token returnToken;
 
     // Set basic token info
@@ -348,11 +387,12 @@ void Scanner::getPrintStatement(int tokenNumber, const string& userInput, int to
     }
 
     // Print our token
-    cout << returnToken.lineNumber << setw(20);
-    cout << returnToken.name << setw(20);
-    cout << returnToken.id << setw(20);
-    cout << returnToken.successId << setw(20);
-    cout << returnToken.userInput << endl;
+//    cout << returnToken.lineNumber << setw(20);
+//    cout << returnToken.name << setw(20);
+//    cout << returnToken.id << setw(20);
+//    cout << returnToken.successId << setw(20);
+//    cout << returnToken.userInput << endl;
+    return returnToken;
 }
 
 /**
