@@ -105,7 +105,7 @@ int stateTable[22][22] = {
     //  { _   a     1     =     >     <     :   +   -   *   /   %   .   (   )   ,   {   }   ;   [   ]   ws   }
         { 1,  2,    3,    4,    5,    6,    7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22   }, // State 0
 
-        { -1, 1002, 1002, -1,   -2,   -1,   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -2   }, // _
+        { -1, 1002, 1003, -1,   -2,   -1,   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -2   }, // _
         { -1, 2,    3,    -1,   -1,   -1,   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1002 }, // a
         { -1, -1,   3,    -1,   -1,   -1,   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1003 }, // 1
         { -1, -1,   -1,   1007, 1005, 1006, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1004 }, // =
@@ -184,24 +184,48 @@ Token Scanner::scan(FILE *file, char character, char lookAhead) {
 
         // We have a correctly formatter identifier
         } else {
-            // Collect characters into a string so we know the whole identifier at the end
-            string word;
-            word.push_back(character);
-            character = getc(file);
+            // If the state is not 0 and there is a space or new line just get the token without the look a head.
+            if (state != 0 && (character == '\n' || isspace(character) || isalpha(character) || character == '_')) {
+                token = Scanner::searchTokens(state, 21);
 
-            while (!isspace(character) && character != '\n' && (isalpha(character) || isdigit(character))) {
-                // Add to string
+                ungetc(character, file);
+
+                // Clear our temp string and reset our state
+                state = 0;
+
+                // If our token returns -2 it means that we cannot have that token by itself ( ie < )
+                if (token == -2)
+                    Scanner::getErrorStatement(tempString, lineNumber);
+                else {
+                    printStatement = Scanner::getPrintStatement(token, tempString, lineNumber);
+                    tempString.clear();
+                }
+            } else {
+                // Collect characters into a string so we know the whole identifier at the end
+                string word;
                 word.push_back(character);
                 character = getc(file);
-            }
 
-            // Check to see if the words are keywords
-            if (checkKeywords(word))
-                // Is a keyword
-                return Scanner::getPrintStatement(1001, word, lineNumber);
-            else
-                // Is not a keyword
-                return Scanner::getPrintStatement(1002, word, lineNumber);
+                while (!isspace(character) && character != '\n' && (isalpha(character) || isdigit(character))) {
+                    // Add to string
+                    word.push_back(character);
+                    character = getc(file);
+                }
+
+                // Unget our character that broke it
+                if (isspace(character) || character == '\n' || (!isalpha(character) && !isdigit(character))) {
+                    ungetc(character, file);
+                    state = 0;
+                }
+
+                // Check to see if the words are keywords
+                if (checkKeywords(word))
+                    // Is a keyword
+                    return Scanner::getPrintStatement(1001, word, lineNumber);
+                else
+                    // Is not a keyword
+                    return Scanner::getPrintStatement(1002, word, lineNumber);
+            }
         }
 
     // The character is not a letter
@@ -330,6 +354,10 @@ int Scanner::getColumn(char character) {
  * @return num
  */
 int Scanner::searchTokens(int tokenState, int tokenColumn) {
+    if (tokenColumn == -99) {
+        return 0;
+    }
+
     // return state or token
     return stateTable[tokenState][tokenColumn];
 }
@@ -364,6 +392,7 @@ Token Scanner::getPrintStatement(int tokenNumber, const string& userInput, int t
     returnToken.successId = tokenNumber;
     returnToken.userInput = userInput;
     returnToken.lineNumber = tokenLineNumber;
+    returnToken.block = "";
 
     // Based on the success id we give it a specific token name/id
     if (tokenNumber == 1000) {
@@ -406,4 +435,6 @@ void Scanner::getErrorStatement(const string& userInput, int tokenLineNumber) {
     cout << "Line Number " << tokenLineNumber << endl;
     cout << "Invalid Syntax " << userInput << endl;
     cout << endl;
+
+    exit(1);
 }

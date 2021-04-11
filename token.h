@@ -13,6 +13,7 @@ struct Token {
     std::string id;
     std::string name;
     std::string userInput;
+    std::string block;
     int successId = 0;
     int lineNumber = 0;
 };
