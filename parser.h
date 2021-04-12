@@ -10,7 +10,7 @@ class Parser {
 public:
     static void parser(const char* fileName);
 private:
-    static struct Node *addStructure(struct Node *, const Token&, struct Node *);
+    static struct Node *addStructure(struct Node *, const Token&, struct Node *, std::string);
     static void printPreorder(struct Node*);
     static Token getNewToken();
 

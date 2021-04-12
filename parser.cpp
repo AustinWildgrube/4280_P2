@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <cstdio>
+#include <utility>
 
 #include "parser.h"
 #include "scanner.h"
@@ -27,7 +28,7 @@ void Parser::parser(const char* fileName) {
     Token fakeToken;
     fakeToken.block = "<program>";
     fakeToken.userInput = "main";
-    root = Parser::addStructure(root, fakeToken, nullptr);
+    root = Parser::addStructure(root, fakeToken, nullptr, "");
 
     // Get our first token
     globalToken = Parser::getNewToken();
@@ -45,7 +46,12 @@ void Parser::parser(const char* fileName) {
  * @param token
  * @return
  */
-struct Node *Parser::addStructure(struct Node *node, const Token& token, struct Node *originNode) {
+struct Node *Parser::addStructure(struct Node *node, const Token& token, struct Node *originNode,
+        string userInput = "") {
+    if (!userInput.empty()) {
+        node->token.userInput = std::move(userInput);
+    }
+
     // If there is no node then create one
     if (node == nullptr) {
         Node *newNode = new Node(token);
@@ -207,7 +213,7 @@ struct Node *Parser::varsToken(struct Node* node, struct Node* originNode) {
     return node;
 }
 
-/** TODO: add minus to fake token
+/**
  * Expr token
  * @param node
  * @return
@@ -221,6 +227,8 @@ struct Node *Parser::exprToken(struct Node* node, struct Node* originNode) {
     node->childOne = Parser::nToken(node->childOne, node);
 
     if (globalToken.id == "OP_tk" && globalToken.userInput == "-") {
+        node = Parser::addStructure(node, fakeToken, originNode, globalToken.userInput);
+
         globalToken = getNewToken();
         node->childTwo = Parser::exprToken(node->childTwo, node);
     }
@@ -228,7 +236,7 @@ struct Node *Parser::exprToken(struct Node* node, struct Node* originNode) {
     return node;
 }
 
-/** TODO: add * to node
+/**
  * N token
  * @param node
  * @return
@@ -241,6 +249,8 @@ struct Node *Parser::nToken(struct Node* node, struct Node* originNode) {
     node->childOne = Parser::aToken(node->childOne, node);
 
     if (globalToken.id == "OP_tk" && (globalToken.userInput == "/" || globalToken.userInput == "*")) {
+        node = Parser::addStructure(node, fakeToken, originNode, globalToken.userInput);
+
         globalToken = getNewToken();
         node->childTwo = Parser::nToken(node->childTwo, node);
     }
@@ -248,7 +258,7 @@ struct Node *Parser::nToken(struct Node* node, struct Node* originNode) {
     return node;
 }
 
-/** TODO:
+/**
  * A token
  * @param node
  * @return
@@ -262,6 +272,8 @@ struct Node *Parser::aToken(struct Node* node, struct Node* originNode) {
 
     globalToken = getNewToken();
     if (globalToken.id == "OP_tk" && globalToken.userInput == "+") {
+        node = Parser::addStructure(node, fakeToken, originNode, globalToken.userInput);
+
         globalToken = getNewToken();
         node->childTwo = Parser::aToken(node->childTwo, node);
     }
@@ -269,7 +281,7 @@ struct Node *Parser::aToken(struct Node* node, struct Node* originNode) {
     return node;
 }
 
-/** TODO:
+/**
  * M token
  * @param node
  * @return
