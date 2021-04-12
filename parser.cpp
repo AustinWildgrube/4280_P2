@@ -68,7 +68,7 @@ struct Node *Parser::addStructure(struct Node *node, const Token& token, struct 
  */
 void Parser::printPreorder(struct Node* node) {
     // Check to make sure tree isn't empty
-    if (node->token.block == nullptr)
+    if (node == nullptr)
         return;
 
     for (int j = 0; j < node->level; j++) {
@@ -228,7 +228,7 @@ struct Node *Parser::exprToken(struct Node* node, struct Node* originNode) {
     return node;
 }
 
-/** TODO:
+/** TODO: add * to node
  * N token
  * @param node
  * @return
@@ -242,7 +242,7 @@ struct Node *Parser::nToken(struct Node* node, struct Node* originNode) {
 
     if (globalToken.id == "OP_tk" && (globalToken.userInput == "/" || globalToken.userInput == "*")) {
         globalToken = getNewToken();
-        node->childTwo = Parser::nToken(node, node);
+        node->childTwo = Parser::nToken(node->childTwo, node);
     }
 
     return node;
