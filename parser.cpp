@@ -48,6 +48,7 @@ void Parser::parser(const char* fileName) {
  */
 struct Node *Parser::addStructure(struct Node *node, const Token& token, struct Node *originNode,
         string userInput = "") {
+
     if (!userInput.empty()) {
         node->token.userInput = std::move(userInput);
     }
@@ -104,7 +105,9 @@ struct Node *Parser::programToken(struct Node* node) {
         globalToken = Parser::getNewToken();
         node->childTwo = Parser::blockToken(node->childTwo, node);
     } else {
-        cout << "Expected an variable or the main keyword, found " << globalToken.userInput << endl;
+        cout << "Expected an variable or the main keyword, found " << globalToken.userInput << " On line "
+        << node->token.lineNumber << endl;
+
         exit(1);
     }
 
@@ -131,15 +134,21 @@ struct Node *Parser::blockToken(struct Node* node, struct Node* originNode) {
             node->childTwo = Parser::statsToken(node->childTwo, node);
 
             if (globalToken.userInput != "end") {
-                cout << "Expected the end keyword, found " << globalToken.userInput << endl;
+                cout << "Expected the end keyword, found " << globalToken.userInput << " On line "
+                << node->token.lineNumber << endl;
+
                 exit(1);
             }
         } else {
-            cout << "Expected a variable, found " << globalToken.userInput << endl;
+            cout << "Expected a variable, found " << globalToken.userInput << " On line "
+            << node->token.lineNumber << endl;
+
             exit(1);
         }
     } else {
-        cout << "Expected the begin keyword, found " << globalToken.userInput << endl;
+        cout << "Expected the begin keyword, found " << globalToken.userInput << " On line "
+        << node->token.lineNumber << endl;
+
         exit(1);
     }
 
@@ -185,19 +194,27 @@ struct Node *Parser::varsToken(struct Node* node, struct Node* originNode) {
 
                         node = Parser::addStructure(node, globalToken, originNode);
                     } else {
-                        cout << "Expected a semicolon, found " << globalToken.userInput << endl;
+                        cout << "Expected a semicolon, found " << globalToken.userInput << " On line "
+                        << node->token.lineNumber << endl;
+
                         exit(1);
                     }
                 } else {
-                    cout << "Expected an integer, found " << globalToken.userInput << endl;
+                    cout << "Expected an integer, found " << globalToken.userInput << " On line "
+                    << node->token.lineNumber << endl;
+
                     exit(1);
                 }
             } else {
-                cout << "Expected a := delimiter, found " << globalToken.userInput << endl;
+                cout << "Expected a := delimiter, found " << globalToken.userInput << " On line "
+                << node->token.lineNumber << endl;
+
                 exit(1);
             }
         } else {
-            cout << "Expected an identifier, found " << globalToken.userInput << endl;
+            cout << "Expected an identifier, found " << globalToken.userInput << " On line "
+            << node->token.lineNumber << endl;
+
             exit(1);
         }
     } else {
@@ -321,14 +338,18 @@ struct Node *Parser::rToken(struct Node* node, struct Node* originNode) {
         node->childOne = Parser::exprToken(node->childOne, node);
 
         if (globalToken.userInput != ")") {
-            cout << "Expected a closing parenthesis, found " << globalToken.userInput << endl;
+            cout << "Expected a closing parenthesis, found " << globalToken.userInput << " On line "
+            << node->token.lineNumber << endl;
+
             exit(1);
         }
     } else if (globalToken.id == "ID_tk" || globalToken.id == "NUM_tk") {
         fakeToken.userInput = globalToken.userInput;
         node = Parser::addStructure(node, fakeToken, originNode);
     } else {
-        cout << "Expected an (expression), identifier, or integer found " << globalToken.userInput << endl;
+        cout << "Expected an (expression), identifier, or integer found " << globalToken.userInput << " On line "
+        << node->token.lineNumber << endl;
+
         exit(1);
     }
 
@@ -423,14 +444,11 @@ struct Node *Parser::statToken(struct Node* node, struct Node* originNode) {
     } else if (globalToken.id == "KW_tk" && globalToken.userInput == "begin") {
         node->childOne = Parser::blockToken(node->childOne, node);
     } else {
-        cout << "Expected a keyword (in, out, if), found " << globalToken.userInput << endl;
+        cout << "Expected a keyword (in, out, if), found " << globalToken.userInput << " On line "
+        << node->token.lineNumber << endl;
+
         exit(1);
     }
-
-//    if (globalToken.id != "DEL_tk" && globalToken.userInput != ";") {
-//        cout << "Expected a semicolon, found " << globalToken.userInput << endl;
-//        exit(1);
-//    }
 
     return node;
 }
@@ -452,7 +470,9 @@ struct Node *Parser::inToken(struct Node* node, struct Node* originNode) {
 
         node = Parser::addStructure(node, globalToken, originNode);
     } else {
-        cout << "Expected a identifier, found " << globalToken.userInput << endl;
+        cout << "Expected a identifier, found " << globalToken.userInput << " On line " << node->token.lineNumber
+        << endl;
+
         exit(1);
     }
 
@@ -507,19 +527,27 @@ struct Node *Parser::ifToken(struct Node* node, struct Node* originNode) {
 
                 globalToken = getNewToken();
                 if (globalToken.id != "DEL_tk" && globalToken.userInput != ";") {
-                    cout << "Expected a semicolon, found " << globalToken.userInput << endl;
+                    cout << "Expected a semicolon, found " << globalToken.userInput << " On line "
+                    << node->token.lineNumber << endl;
+
                     exit(1);
                 }
             } else {
-                cout << "Expected the then keyword, found " << globalToken.userInput << endl;
+                cout << "Expected the then keyword, found " << globalToken.userInput << " On line "
+                << node->token.lineNumber << endl;
+
                 exit(1);
             }
         } else {
-            cout << "Expected a closing bracket, found " << globalToken.userInput << endl;
+            cout << "Expected a closing bracket, found " << globalToken.userInput << " On line "
+            << node->token.lineNumber << endl;
+
             exit(1);
         }
     } else {
-        cout << "Expected an open bracket, found " << globalToken.userInput << endl;
+        cout << "Expected an open bracket, found " << globalToken.userInput << " On line " << node->token.lineNumber
+        << endl;
+
         exit(1);
     }
 
@@ -552,11 +580,15 @@ struct Node *Parser::loopToken(struct Node* node, struct Node* originNode) {
             globalToken = getNewToken();
             node->childFour = Parser::statToken(node->childFour, node);
         } else {
-            cout << "Expected a closing bracket, found " << globalToken.userInput << endl;
+            cout << "Expected a closing bracket, found " << globalToken.userInput << " On line "
+            << node->token.lineNumber << endl;
+
             exit(1);
         }
     } else {
-        cout << "Expected an open bracket, found " << globalToken.userInput << endl;
+        cout << "Expected an open bracket, found " << globalToken.userInput << " On line " << node->token.lineNumber
+        << endl;
+
         exit(1);
     }
 
@@ -591,15 +623,21 @@ struct Node *Parser::assignToken(struct Node* node, struct Node* originNode) {
                 globalToken = getNewToken();
                 node->childOne = Parser::exprToken(node->childOne, node);
             } else {
-                cout << "Expected an := operator, found " << globalToken.userInput << endl;
+                cout << "Expected an := operator, found " << globalToken.userInput << " On line "
+                << node->token.lineNumber << endl;
+
                 exit(1);
             }
         } else {
-            cout << "Expected an identifier, found " << globalToken.userInput << endl;
+            cout << "Expected an identifier, found " << globalToken.userInput << " On line "
+            << node->token.lineNumber << endl;
+
             exit(1);
         }
     } else {
-        cout << "Expected the keyword assign, found " << globalToken.userInput << endl;
+        cout << "Expected the keyword assign, found " << globalToken.userInput << " On line "
+        << node->token.lineNumber << endl;
+
         exit(1);
     }
 
@@ -631,15 +669,19 @@ struct Node *Parser::r0Token(struct Node* node, struct Node* originNode) {
                 globalToken.userInput = statement;
                 node = Parser::addStructure(node, globalToken, originNode);
             } else {
-                cout << "Expected a closing bracket, found " << globalToken.userInput << endl;
+                cout << "Expected a closing bracket, found " << globalToken.userInput << " On line "
+                << node->token.lineNumber << endl;
+
                 exit(1);
             }
         } else {
-            cout << "Expected ==, found " << globalToken.userInput << endl;
+            cout << "Expected ==, found " << globalToken.userInput << " On line " << node->token.lineNumber << endl;
             exit(1);
         }
     } else {
-        cout << "Expected an operator or an open bracket, found " << globalToken.userInput << endl;
+        cout << "Expected an operator or an open bracket, found " << globalToken.userInput << " On line "
+        << node->token.lineNumber << endl;
+
         exit(1);
     }
 
@@ -663,7 +705,9 @@ struct Node *Parser::labelToken(struct Node* node, struct Node* originNode) {
 
         node = Parser::addStructure(node, globalToken, originNode);
     } else {
-        cout << "Expected a identifier, found " << globalToken.userInput << endl;
+        cout << "Expected a identifier, found " << globalToken.userInput << " On line " << node->token.lineNumber
+        << endl;
+
         exit(1);
     }
 
@@ -687,7 +731,9 @@ struct Node *Parser::gotoToken(struct Node* node, struct Node* originNode) {
 
         node = Parser::addStructure(node, globalToken, originNode);
     } else {
-        cout << "Expected a identifier, found " << globalToken.userInput << endl;
+        cout << "Expected a identifier, found " << globalToken.userInput << " On line " << node->token.lineNumber
+        << endl;
+
         exit(1);
     }
 
