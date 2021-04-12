@@ -157,6 +157,10 @@ Token Scanner::scan(FILE *file, char character, char lookAhead) {
                     character = getc(file);
                 }
             }
+
+            if (character == '\n') {
+                lineNumber++;
+            }
         } while (character != '$');
 
         character = getc(file);
