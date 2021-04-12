@@ -395,7 +395,7 @@ struct Node *Parser::rToken(struct Node* node, struct Node* originNode) {
 
     // Found nothing of use so error
     } else {
-        cout << "Expected an (expression), identifier, or integer found " << globalToken.userInput << " on line "
+        cout << "Expected an ( expression ), identifier, or integer found " << globalToken.userInput << " on line "
         << globalToken.lineNumber << endl;
 
         exit(1);
@@ -487,7 +487,7 @@ struct Node *Parser::statToken(struct Node* node, struct Node* originNode) {
     } else if (globalToken.id == "KW_tk" && globalToken.userInput == "begin") {
         node->childOne = Parser::blockToken(node->childOne, node);
     } else {
-        cout << "Expected a keyword (in, out, if), found " << globalToken.userInput << " on line "
+        cout << "Expected a keyword (getter, outter, if, etc), found " << globalToken.userInput << " on line "
         << globalToken.lineNumber << endl;
 
         exit(1);
@@ -690,7 +690,7 @@ struct Node *Parser::assignToken(struct Node* node, struct Node* originNode) {
                 globalToken = getNewToken();
                 node->childOne = Parser::exprToken(node->childOne, node);
             } else {
-                cout << "Expected an := operator, found " << globalToken.userInput << " on line "
+                cout << "Expected an := delimiter, found " << globalToken.userInput << " on line "
                 << globalToken.lineNumber << endl;
 
                 exit(1);
