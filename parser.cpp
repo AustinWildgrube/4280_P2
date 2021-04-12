@@ -133,6 +133,7 @@ struct Node *Parser::programToken(struct Node* node) {
  * Block token
  * <block> -> begin <vars> <stats> end
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::blockToken(struct Node* node, struct Node* originNode) {
@@ -179,6 +180,7 @@ struct Node *Parser::blockToken(struct Node* node, struct Node* originNode) {
  * Vars token
  * <vars> -> empty | data Identifier :=  Integer  ;  <vars>
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::varsToken(struct Node* node, struct Node* originNode) {
@@ -263,6 +265,7 @@ struct Node *Parser::varsToken(struct Node* node, struct Node* originNode) {
  * Expr token
  * <expr> -> <N> - <expr>  | <N>
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::exprToken(struct Node* node, struct Node* originNode) {
@@ -291,6 +294,7 @@ struct Node *Parser::exprToken(struct Node* node, struct Node* originNode) {
  * N token
  * <N> -> <A> / <N> | <A> * <N> | <A>
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::nToken(struct Node* node, struct Node* originNode) {
@@ -315,6 +319,7 @@ struct Node *Parser::nToken(struct Node* node, struct Node* originNode) {
  * A token
  * <A> -> <M> + <A> | <M>
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::aToken(struct Node* node, struct Node* originNode) {
@@ -339,6 +344,7 @@ struct Node *Parser::aToken(struct Node* node, struct Node* originNode) {
  * M token
  * <M> -> * <M> |  <R>
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::mToken(struct Node* node, struct Node* originNode) {
@@ -366,6 +372,7 @@ struct Node *Parser::mToken(struct Node* node, struct Node* originNode) {
  * R token
  * <R> -> ( <expr> ) | Identifier | Integer
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::rToken(struct Node* node, struct Node* originNode) {
@@ -408,6 +415,7 @@ struct Node *Parser::rToken(struct Node* node, struct Node* originNode) {
  * Stats token
  * <stats> -> <stat> <mStat>
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::statsToken(struct Node* node, struct Node* originNode) {
@@ -428,6 +436,7 @@ struct Node *Parser::statsToken(struct Node* node, struct Node* originNode) {
  * mStat token
  * <mStat> -> empty | <stat> <mStat>
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::mStatToken(struct Node* node, struct Node* originNode) {
@@ -457,6 +466,7 @@ struct Node *Parser::mStatToken(struct Node* node, struct Node* originNode) {
  * Stat token
  * <stat> -> <in> ;  | <out> ;  | <block>| <if> ;  | <loop> ;  | <assign> ; | <goto> ; | <label> ;
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::statToken(struct Node* node, struct Node* originNode) {
@@ -500,6 +510,7 @@ struct Node *Parser::statToken(struct Node* node, struct Node* originNode) {
  * In Token
  * <in> -> getter  Identifier
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::inToken(struct Node* node, struct Node* originNode) {
@@ -528,6 +539,7 @@ struct Node *Parser::inToken(struct Node* node, struct Node* originNode) {
  * Out Token
  * <out> -> outter <expr>
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::outToken(struct Node* node, struct Node* originNode) {
@@ -547,6 +559,7 @@ struct Node *Parser::outToken(struct Node* node, struct Node* originNode) {
  * If Token
  * <if> -> if [ <expr> <RO> <expr> ]then <stat>
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::ifToken(struct Node* node, struct Node* originNode) {
@@ -612,6 +625,7 @@ struct Node *Parser::ifToken(struct Node* node, struct Node* originNode) {
  * Loop Token
  * <loop> -> loop  [ <expr> <RO> <expr> ]  <stat>
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::loopToken(struct Node* node, struct Node* originNode) {
@@ -664,6 +678,7 @@ struct Node *Parser::loopToken(struct Node* node, struct Node* originNode) {
  * Assign Token
  * <assign> -> assignIdentifier  := <expr>
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::assignToken(struct Node* node, struct Node* originNode) {
@@ -715,6 +730,7 @@ struct Node *Parser::assignToken(struct Node* node, struct Node* originNode) {
  * R0 Token
  * <RO> -> =>  | =<|  ==  |   [ == ]  (three tokens)  | %
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::r0Token(struct Node* node, struct Node* originNode) {
@@ -762,6 +778,7 @@ struct Node *Parser::r0Token(struct Node* node, struct Node* originNode) {
  * Label Token
  * <label> -> void Identifier
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::labelToken(struct Node* node, struct Node* originNode) {
@@ -790,6 +807,7 @@ struct Node *Parser::labelToken(struct Node* node, struct Node* originNode) {
  * Goto Token
  * <goto> -> proc Identifier
  * @param node
+ * @param originNode
  * @return
  */
 struct Node *Parser::gotoToken(struct Node* node, struct Node* originNode) {
