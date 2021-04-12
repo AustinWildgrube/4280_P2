@@ -579,6 +579,14 @@ struct Node *Parser::loopToken(struct Node* node, struct Node* originNode) {
         if (globalToken.id == "DEL_tk" && globalToken.userInput == "]") {
             globalToken = getNewToken();
             node->childFour = Parser::statToken(node->childFour, node);
+
+            globalToken = getNewToken();
+            if (globalToken.id != "DEL_tk" || globalToken.userInput != ";") {
+                cout << "Expected a semicolon, found " << globalToken.userInput << " On line "
+                     << node->token.lineNumber << endl;
+
+                exit(1);
+            }
         } else {
             cout << "Expected a closing bracket, found " << globalToken.userInput << " On line "
             << node->token.lineNumber << endl;
