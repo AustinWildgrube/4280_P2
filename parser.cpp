@@ -25,6 +25,7 @@ void Parser::parser(const char* fileName) {
     // Open our file
     file = fopen(fileName, "r");
 
+    // We need to insert our root node ahead of time so it won't be inserted twice.
     Token fakeToken;
     fakeToken.block = "<program>";
     fakeToken.userInput = "main";
@@ -41,14 +42,19 @@ void Parser::parser(const char* fileName) {
 }
 
 /**
- * Add a node to the parse tree
+ * We can add our nodes to the tree here, but we can also edit existing nodes in the case
+ * that we have an operator that was discovered after the fact.
  * @param node
  * @param token
+ * @param originNode
+ * @param userInput
  * @return
  */
 struct Node *Parser::addStructure(struct Node *node, const Token& token, struct Node *originNode,
-        string userInput = "") {
+    string userInput = "") {
 
+    // If the user input is not empty we simply just edit the node
+    // instead of adding one
     if (!userInput.empty()) {
         node->token.userInput = std::move(userInput);
     }
@@ -57,6 +63,8 @@ struct Node *Parser::addStructure(struct Node *node, const Token& token, struct 
     if (node == nullptr) {
         Node *newNode = new Node(token);
 
+        // We can find which level it needs to be by looking at the root nodes
+        // level and adding one.
         if (originNode == nullptr) {
             newNode->level = 0;
         } else {
@@ -70,7 +78,7 @@ struct Node *Parser::addStructure(struct Node *node, const Token& token, struct 
 }
 
 /**
- * Print the parse tree
+ * Here we print our tree in preorder fashion
  * @param node
  */
 void Parser::printPreorder(struct Node* node) {
@@ -78,6 +86,7 @@ void Parser::printPreorder(struct Node* node) {
     if (node == nullptr)
         return;
 
+    // Count our spaces
     for (int j = 0; j < node->level; j++) {
         cout << "  ";
     }
@@ -85,7 +94,7 @@ void Parser::printPreorder(struct Node* node) {
     // After printing the spaces we then print the leaf info
     cout << node->token.block << " " << node->token.userInput << endl;
 
-    //recursively process children
+    // Recursively process children
     Parser::printPreorder(node->childOne);
     Parser::printPreorder(node->childTwo);
     Parser::printPreorder(node->childThree);
@@ -94,16 +103,22 @@ void Parser::printPreorder(struct Node* node) {
 
 /**
  * Program token
+ * <program> -> <vars> main <block>
  * @param node
  * @return
  */
 struct Node *Parser::programToken(struct Node* node) {
+    // If our first keyword isn't main then we have a variable
     if ((globalToken.id == "KW_tk" && globalToken.userInput != "main") || (globalToken.id == "ID_tk")) {
         node->childOne = Parser::varsToken(node->childOne, node);
         Parser::programToken(node->childOne);
+
+    // Check for our main keyword to start
     } else if (globalToken.id == "KW_tk" && globalToken.userInput == "main") {
         globalToken = Parser::getNewToken();
         node->childTwo = Parser::blockToken(node->childTwo, node);
+
+    // Error
     } else {
         cout << "Expected an variable or the main keyword, found " << globalToken.userInput << " On line "
         << node->token.lineNumber << endl;
@@ -116,18 +131,23 @@ struct Node *Parser::programToken(struct Node* node) {
 
 /**
  * Block token
+ * <block> -> begin <vars> <stats> end
  * @param node
  * @return
  */
 struct Node *Parser::blockToken(struct Node* node, struct Node* originNode) {
+    // Needs to start with begin
     if (globalToken.id == "KW_tk" && globalToken.userInput == "begin") {
+        // Edit our block token
         globalToken.userInput = "begin end";
         globalToken.block = "<block>";
 
+        // Add our block to the tree
         node = Parser::addStructure(node, globalToken, originNode);
 
         globalToken = Parser::getNewToken();
         if ((globalToken.id == "KW_tk" && globalToken.userInput != "main") || (globalToken.id == "ID_tk")) {
+            // Have to have variable token first
             node->childOne = Parser::varsToken(node->childOne, node);
 
             // Do stats after variables
@@ -157,35 +177,40 @@ struct Node *Parser::blockToken(struct Node* node, struct Node* originNode) {
 
 /**
  * Vars token
- * EX: data _MIN := 3;
+ * <vars> -> empty | data Identifier :=  Integer  ;  <vars>
  * @param node
  * @return
  */
 struct Node *Parser::varsToken(struct Node* node, struct Node* originNode) {
     string statement;
 
+    // Variables must start with data keyword
     if (globalToken.id == "KW_tk" && globalToken.userInput == "data") {
         statement += globalToken.userInput;
         globalToken = Parser::getNewToken();
 
+        // Followed by an id
         if (globalToken.id == "ID_tk") {
             statement += " ";
             statement += globalToken.userInput;
 
             globalToken = Parser::getNewToken();
 
+            // Followed by an :=
             if (globalToken.id == "OP_tk" && globalToken.userInput == ":=") {
                 statement += " ";
                 statement += globalToken.userInput;
 
                 globalToken = Parser::getNewToken();
 
+                // Followed by a number
                 if (globalToken.id == "NUM_tk") {
                     statement += " ";
                     statement += globalToken.userInput;
 
                     globalToken = Parser::getNewToken();
 
+                    // Ended with a semicolon
                     if (globalToken.id == "DEL_tk" && globalToken.userInput == ";") {
                         statement += globalToken.userInput;
 
@@ -221,29 +246,38 @@ struct Node *Parser::varsToken(struct Node* node, struct Node* originNode) {
         return node;
     }
 
+    // Since we can have multiple variables in a row we should check
+    // for another directly after
     statement = "";
     globalToken = Parser::getNewToken();
     if (globalToken.id == "KW_tk" && globalToken.userInput == "data") {
         node->childOne = Parser::varsToken(node->childOne, node);
     }
 
+
+    // We are done with variables so return
     return node;
 }
 
 /**
  * Expr token
+ * <expr> -> <N> - <expr>  | <N>
  * @param node
  * @return
  */
 struct Node *Parser::exprToken(struct Node* node, struct Node* originNode) {
+    // We need to add a node a head of time so we can pass down the children
     Token fakeToken;
     fakeToken.block = "<expr>";
 
     node = Parser::addStructure(node, fakeToken, originNode);
 
+    // Our first token has to be a n token
     node->childOne = Parser::nToken(node->childOne, node);
 
+    // After we return we can have a - token
     if (globalToken.id == "OP_tk" && globalToken.userInput == "-") {
+        // We need to edit our root node
         node = Parser::addStructure(node, fakeToken, originNode, globalToken.userInput);
 
         globalToken = getNewToken();
@@ -255,10 +289,12 @@ struct Node *Parser::exprToken(struct Node* node, struct Node* originNode) {
 
 /**
  * N token
+ * <N> -> <A> / <N> | <A> * <N> | <A>
  * @param node
  * @return
  */
 struct Node *Parser::nToken(struct Node* node, struct Node* originNode) {
+    // We need to add a node a head of time so we can pass down the children
     Token fakeToken;
     fakeToken.block = "<N>";
     node = Parser::addStructure(node, fakeToken, originNode);
@@ -277,6 +313,7 @@ struct Node *Parser::nToken(struct Node* node, struct Node* originNode) {
 
 /**
  * A token
+ * <A> -> <M> + <A> | <M>
  * @param node
  * @return
  */
@@ -300,6 +337,7 @@ struct Node *Parser::aToken(struct Node* node, struct Node* originNode) {
 
 /**
  * M token
+ * <M> -> * <M> |  <R>
  * @param node
  * @return
  */
@@ -307,12 +345,15 @@ struct Node *Parser::mToken(struct Node* node, struct Node* originNode) {
     Token fakeToken;
     fakeToken.block = "<M>";
 
+    // Here we can have a * and if we don;t we just go to the r token
     if (globalToken.id == "OP_tk" && globalToken.userInput == "*") {
         fakeToken.userInput = "*";
         node = Parser::addStructure(node, fakeToken, originNode);
 
         globalToken = getNewToken();
         node->childOne = Parser::mToken(node->childOne, node);
+
+    // Didn't have a * so we are going to r token
     } else {
         node = Parser::addStructure(node, fakeToken, originNode);
         node->childOne = Parser::rToken(node->childOne, node);
@@ -323,6 +364,7 @@ struct Node *Parser::mToken(struct Node* node, struct Node* originNode) {
 
 /**
  * R token
+ * <R> -> ( <expr> ) | Identifier | Integer
  * @param node
  * @return
  */
@@ -330,6 +372,7 @@ struct Node *Parser::rToken(struct Node* node, struct Node* originNode) {
     Token fakeToken;
     fakeToken.block = "<R>";
 
+    // If we find a ( it means we are going into an expression
     if (globalToken.id == "DEL_tk" && globalToken.userInput == "(") {
         fakeToken.userInput = "( )";
         node = Parser::addStructure(node, fakeToken, originNode);
@@ -337,15 +380,20 @@ struct Node *Parser::rToken(struct Node* node, struct Node* originNode) {
         globalToken = getNewToken();
         node->childOne = Parser::exprToken(node->childOne, node);
 
+        // Must have closing )
         if (globalToken.userInput != ")") {
             cout << "Expected a closing parenthesis, found " << globalToken.userInput << " On line "
             << node->token.lineNumber << endl;
 
             exit(1);
         }
+
+    // We can also have a number or id
     } else if (globalToken.id == "ID_tk" || globalToken.id == "NUM_tk") {
         fakeToken.userInput = globalToken.userInput;
         node = Parser::addStructure(node, fakeToken, originNode);
+
+    // Found nothing of use so error
     } else {
         cout << "Expected an (expression), identifier, or integer found " << globalToken.userInput << " On line "
         << node->token.lineNumber << endl;
@@ -358,6 +406,7 @@ struct Node *Parser::rToken(struct Node* node, struct Node* originNode) {
 
 /**
  * Stats token
+ * <stats> -> <stat> <mStat>
  * @param node
  * @return
  */
@@ -377,34 +426,26 @@ struct Node *Parser::statsToken(struct Node* node, struct Node* originNode) {
 
 /**
  * mStat token
+ * <mStat> -> empty | <stat> <mStat>
  * @param node
  * @return
  */
 struct Node *Parser::mStatToken(struct Node* node, struct Node* originNode) {
+    // if we have the end keyword we know mstat is empty
     if (globalToken.id == "KW_tk" && globalToken.userInput != "end") {
         Token fakeToken;
         fakeToken.block = "<mStat>";
 
         node = Parser::addStructure(node, fakeToken, originNode);
 
-        if (globalToken.userInput == "getter") {
-            node->childOne = Parser::statToken(node->childOne, node);
-        } else if (globalToken.userInput == "outter") {
-            node->childOne = Parser::statToken(node->childOne, node);
-        } else if (globalToken.userInput == "if") {
-            node->childOne = Parser::statToken(node->childOne, node);
-        } else if (globalToken.userInput == "loop") {
-            node->childOne = Parser::statToken(node->childOne, node);
-        } else if (globalToken.userInput == "assign") {
-            node->childOne = Parser::statToken(node->childOne, node);
-        } else if (globalToken.userInput == "void") {
-            node->childOne = Parser::statToken(node->childOne, node);
-        } else if (globalToken.userInput == "proc") {
-            node->childOne = Parser::statToken(node->childOne, node);
-        } else if (globalToken.userInput == "begin") {
+        // We need to check for all of our keywords that lead us to a new token
+        if (globalToken.userInput == "getter" || globalToken.userInput == "outter" || globalToken.userInput == "if" ||
+            globalToken.userInput == "loop" || globalToken.userInput == "assign" || globalToken.userInput == "void" ||
+            globalToken.userInput == "proc" || globalToken.userInput == "begin") {
             node->childOne = Parser::statToken(node->childOne, node);
         }
 
+        // We can always loop back into mstat
         globalToken = Parser::getNewToken();
         node->childTwo = Parser::mStatToken(node->childTwo, node);
     }
@@ -414,6 +455,7 @@ struct Node *Parser::mStatToken(struct Node* node, struct Node* originNode) {
 
 /**
  * Stat token
+ * <stat> -> <in> ;  | <out> ;  | <block>| <if> ;  | <loop> ;  | <assign> ; | <goto> ; | <label> ;
  * @param node
  * @return
  */
@@ -424,6 +466,7 @@ struct Node *Parser::statToken(struct Node* node, struct Node* originNode) {
 
     node = Parser::addStructure(node, fakeToken, originNode);
 
+    // Check if our token is one of the stat keywords so we can move on
     if (globalToken.id == "KW_tk" && globalToken.userInput == "getter") {
         node->childOne = Parser::inToken(node->childOne, node);
         globalToken = getNewToken();
@@ -455,6 +498,7 @@ struct Node *Parser::statToken(struct Node* node, struct Node* originNode) {
 
 /**
  * In Token
+ * <in> -> getter  Identifier
  * @param node
  * @return
  */
@@ -464,6 +508,7 @@ struct Node *Parser::inToken(struct Node* node, struct Node* originNode) {
     globalToken = getNewToken();
     globalToken.block = "<in>";
 
+    // We have to have an identifier on this one
     if (globalToken.id == "ID_tk") {
         statement += globalToken.userInput;
         globalToken.userInput = statement;
@@ -481,6 +526,7 @@ struct Node *Parser::inToken(struct Node* node, struct Node* originNode) {
 
 /**
  * Out Token
+ * <out> -> outter <expr>
  * @param node
  * @return
  */
@@ -499,6 +545,7 @@ struct Node *Parser::outToken(struct Node* node, struct Node* originNode) {
 
 /**
  * If Token
+ * <if> -> if [ <expr> <RO> <expr> ]then <stat>
  * @param node
  * @return
  */
@@ -510,8 +557,12 @@ struct Node *Parser::ifToken(struct Node* node, struct Node* originNode) {
     node = Parser::addStructure(node, fakeToken, originNode);
 
     globalToken = getNewToken();
+
+    // Need to check for bracket
     if (globalToken.id == "DEL_tk" && globalToken.userInput == "[") {
         globalToken = getNewToken();
+
+        // Now we do the three tokens inside the brackets
         node->childOne = Parser::exprToken(node->childOne, node);
 
         node->childTwo = Parser::r0Token(node->childTwo, node);
@@ -519,6 +570,7 @@ struct Node *Parser::ifToken(struct Node* node, struct Node* originNode) {
         globalToken = getNewToken();
         node->childThree = Parser::exprToken(node->childThree, node);
 
+        // We have to have a closing bracket
         if (globalToken.id == "DEL_tk" && globalToken.userInput == "]") {
             globalToken = getNewToken();
             if (globalToken.id == "KW_tk" && globalToken.userInput == "then") {
@@ -526,6 +578,8 @@ struct Node *Parser::ifToken(struct Node* node, struct Node* originNode) {
                 node->childFour = Parser::statToken(node->childFour, node);
 
                 globalToken = getNewToken();
+
+                // Also end with a semicolon
                 if (globalToken.id != "DEL_tk" && globalToken.userInput != ";") {
                     cout << "Expected a semicolon, found " << globalToken.userInput << " On line "
                     << node->token.lineNumber << endl;
@@ -556,6 +610,7 @@ struct Node *Parser::ifToken(struct Node* node, struct Node* originNode) {
 
 /**
  * Loop Token
+ * <loop> -> loop  [ <expr> <RO> <expr> ]  <stat>
  * @param node
  * @return
  */
@@ -567,6 +622,8 @@ struct Node *Parser::loopToken(struct Node* node, struct Node* originNode) {
     node = Parser::addStructure(node, fakeToken, originNode);
 
     globalToken = getNewToken();
+
+    // This is similar to the if token
     if (globalToken.id == "DEL_tk" && globalToken.userInput == "[") {
         globalToken = getNewToken();
         node->childOne = Parser::exprToken(node->childOne, node);
@@ -605,12 +662,14 @@ struct Node *Parser::loopToken(struct Node* node, struct Node* originNode) {
 
 /**
  * Assign Token
+ * <assign> -> assignIdentifier  := <expr>
  * @param node
  * @return
  */
 struct Node *Parser::assignToken(struct Node* node, struct Node* originNode) {
     string statement;
 
+    // Same as var token but substituting data for assign
     if (globalToken.id == "KW_tk" && globalToken.userInput == "assign") {
         statement += globalToken.userInput;
         statement += " ";
@@ -654,15 +713,18 @@ struct Node *Parser::assignToken(struct Node* node, struct Node* originNode) {
 
 /**
  * R0 Token
+ * <RO> -> =>  | =<|  ==  |   [ == ]  (three tokens)  | %
  * @param node
  * @return
  */
 struct Node *Parser::r0Token(struct Node* node, struct Node* originNode) {
-    // TODO: Three tokens
+    // Here we just look for our operator tokens
     if (globalToken.id == "OP_tk" && (globalToken.userInput == "=>" || globalToken.userInput == "=<"
         || globalToken.userInput == "==" || globalToken.userInput == "%")) {
         globalToken.block = "<R0>";
         node = Parser::addStructure(node, globalToken, originNode);
+
+    // The [==] token requires 3 different tokens combined so we need to check for all 3
     } else if (globalToken.id == "DEL_tk" && globalToken.userInput == "[") {
         string statement = globalToken.userInput;
         statement += " ";
@@ -698,6 +760,7 @@ struct Node *Parser::r0Token(struct Node* node, struct Node* originNode) {
 
 /**
  * Label Token
+ * <label> -> void Identifier
  * @param node
  * @return
  */
@@ -707,6 +770,7 @@ struct Node *Parser::labelToken(struct Node* node, struct Node* originNode) {
     globalToken = getNewToken();
     globalToken.block = "<label>";
 
+    // Only need an identifier since we found void in the stat token
     if (globalToken.id == "ID_tk") {
         statement += globalToken.userInput;
         globalToken.userInput = statement;
@@ -724,6 +788,7 @@ struct Node *Parser::labelToken(struct Node* node, struct Node* originNode) {
 
 /**
  * Goto Token
+ * <goto> -> proc Identifier
  * @param node
  * @return
  */
@@ -733,6 +798,7 @@ struct Node *Parser::gotoToken(struct Node* node, struct Node* originNode) {
     globalToken = getNewToken();
     globalToken.block = "<goto>";
 
+    // Only need an identifier since we found proc in stat token
     if (globalToken.id == "ID_tk") {
         statement += globalToken.userInput;
         globalToken.userInput = statement;
@@ -749,7 +815,7 @@ struct Node *Parser::gotoToken(struct Node* node, struct Node* originNode) {
 }
 
 /**
- * Get a new token from our scanner
+ * Here we can grab our next token from our scanner
  * @return
  */
 Token Parser::getNewToken() {
@@ -764,5 +830,6 @@ Token Parser::getNewToken() {
         returnToken = Scanner::scan(file, character, lookAhead);
     } while (returnToken.successId == 0);
 
+    // Return to the parser
     return returnToken;
 }

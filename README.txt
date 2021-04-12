@@ -25,6 +25,6 @@ For example: ./frontEnd [fileName].fs
 This program ONLY accepts .fs files.
 
 An example file is included and can be ran using the command:
-./frontEnd test_data.fs
+./frontEnd test/test_data.fs
 
 My Github repo for this is private, and if you would like access I am more than happy to open it or add you as a member.
